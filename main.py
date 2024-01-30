@@ -219,7 +219,68 @@ while cap.isOpened():
                             truck_left_counter = 0
                             model = model_x_seg
 
+                            # PANORAMA
+                            imgs = []
+                            print('len(captured_frames): ', len(captured_frames))
 
+                            for i in range(len(captured_frames)):
+                                imgs.append(captured_frames[i]) 
+                                imgs[i]=cv2.resize(imgs[i],(0,0),fx=0.6,fy=0.6) 
+                                # this is optional if your input images isn't too large 
+                                # you don't need to scale down the image 
+                                # in my case the input images are of dimensions 3000x1200 
+                                # and due to this the resultant image won't fit the screen 
+                                # scaling down the images  
+
+                            imgs_reverse = imgs[::-1] # Reversing the order as we collected front images of the truck first followed by the back images
+
+
+                            # STITCHING
+                            stitcher = cv2.createStitcher() if imutils.is_cv3() else cv2.Stitcher_create()
+                            (status, panaroma) = stitcher.stitch(imgs_reverse)
+
+                            if status != cv2.STITCHER_OK: 
+                            # checking if the stitching procedure is successful 
+                            # .stitch() function returns a true value if stitching is  
+                            # done successfully 
+                                print("Stitching ain't successful") 
+                            else:  
+                                print('Your Panorama is ready!!!') 
+                                # final output 
+                                cv2.imshow('final result',panaroma) 
+                                cv2.imwrite('final_result.jpg',panaroma)
+                                cv2.waitKey(1)
+
+
+                            # MASKING
+                            results = model(panaroma,
+                                                conf= 0.40,
+                                                iou= 0.75,
+                                                show= False,
+                                                show_labels= True,
+                                                show_conf= True,
+                                                stream_buffer= False,  # buffer all streaming frames (True) or return the most recent frame (False)
+                                                boxes= True,
+                                                save_crop= False,
+                                                visualize= False,
+                                                retina_masks= True,
+                                                classes=[7])  
+
+                            for r in results:
+                                mask_data = r.masks.data.tolist()[0]
+
+
+                            mask = np.zeros_like(panaroma)
+                            mask_array = np.array(mask_data)
+                            print(panaroma.shape, mask_array.shape)
+
+                            mask_array_uint8 = mask_array.astype(np.uint8)
+                            masked_image = panaroma * mask_array_uint8[:, :, np.newaxis]
+
+                            cv2.imwrite('masked_image.jpg', masked_image)
+                            cv2.imshow('masked_image.jpg', masked_image)
+                            cv2.waitKey(1)  # This will display the frame for 1 millisecond before moving to the next frame
+                            tracking_session = False
 
 
                 prev_circle_tracker = circle_tracker
