@@ -86,7 +86,7 @@ while cap.isOpened():
                             truck_w = truck_x2 - truck_x1
 
 
-                            if truck_h > VIDEO_HEIGHT * OBJECT_CLOSER_RATIO_HEIGHT: # eğer kamyon yeterince yakındaysa
+                            if truck_h > VIDEO_HEIGHT * OBJECT_CLOSER_RATIO_HEIGHT: # if truck close enough
                                 
                                 if truck_x2 > TRACK_START_FRAME_RATE and truck_picture_counter == 0:
                                     verification_counter += 1
